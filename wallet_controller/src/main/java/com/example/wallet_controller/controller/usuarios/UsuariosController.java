@@ -113,6 +113,34 @@ public class UsuariosController {
         }
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> dadosLogin) {
+        try {
+            String email = dadosLogin.get("email");
+            String senha = dadosLogin.get("senha");
+
+            if (email == null || senha == null) {
+                return ResponseEntity.badRequest().body("Email e senha são obrigatórios.");
+            }
+
+            Optional<Usuarios> usuarioExistente = repository.findByEmail(email);
+
+            if (usuarioExistente.isPresent()) {
+                Usuarios usuario = usuarioExistente.get();
+                // Verifica se a senha fornecida está correta
+                if (usuario.getSenha().equals(senha)) {
+                    return ResponseEntity.ok(usuario);
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou senha incorretos.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou senha incorretos.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao fazer login.");
+        }
+    }
+
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id) {
