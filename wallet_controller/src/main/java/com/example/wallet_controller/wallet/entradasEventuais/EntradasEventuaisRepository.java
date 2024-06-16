@@ -10,6 +10,8 @@ import java.util.List;
 public interface EntradasEventuaisRepository extends JpaRepository<EntradasEventuais, Integer> {
     List<EntradasEventuais> findAllByIdUsuario(Integer idUsuario);
 
+    EntradasEventuais findTopByOrderByIdDesc();
+
     List<EntradasEventuais> findByIdUsuarioAndDataBetween(Integer idUsuario, LocalDate startDate, LocalDate endDate);
 
     List<EntradasEventuais> deleteByIdUsuario(Integer idUsuario);

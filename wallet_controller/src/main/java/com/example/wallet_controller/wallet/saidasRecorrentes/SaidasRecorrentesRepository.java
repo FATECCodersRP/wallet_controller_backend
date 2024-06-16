@@ -1,5 +1,6 @@
 package com.example.wallet_controller.wallet.saidasRecorrentes;
 
+import com.example.wallet_controller.wallet.entradasEventuais.EntradasEventuais;
 import com.example.wallet_controller.wallet.usuarios.Usuarios;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -8,6 +9,8 @@ import java.util.List;
 
 public interface SaidasRecorrentesRepository extends JpaRepository<SaidasRecorrentes, Integer> {
     List<SaidasRecorrentes> findAllByIdUsuario(Integer idUsuario);
+
+    SaidasRecorrentes findTopByOrderByIdDesc();
 
     List<SaidasRecorrentes> deleteByIdUsuario(Integer idUsuario);
 
