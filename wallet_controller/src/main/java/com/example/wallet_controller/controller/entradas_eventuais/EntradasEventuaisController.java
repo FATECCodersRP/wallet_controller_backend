@@ -2,6 +2,8 @@ package com.example.wallet_controller.controller.entradas_eventuais;
 
 import com.example.wallet_controller.wallet.entradasEventuais.EntradasEventuais;
 import com.example.wallet_controller.wallet.entradasEventuais.EntradasEventuaisRepository;
+import com.example.wallet_controller.wallet.entradasRecorrentes.EntradasRecorrentes;
+import com.example.wallet_controller.wallet.entradasRecorrentes.EntradasRecorrentesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -21,24 +24,44 @@ import java.util.List;
 public class EntradasEventuaisController {
 
     @Autowired
-    private EntradasEventuaisRepository repository;
+    private EntradasEventuaisRepository eventuaisRepository;
+
+    @Autowired
+    private EntradasRecorrentesRepository recorrentesRepository;
 
     @GetMapping("geral/{userId}")
-    public ResponseEntity<List<EntradasEventuais>> getAllByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<Object> getAllByUserId(@PathVariable Integer userId) {
         try {
-            List<EntradasEventuais> walletList = repository.findAllByIdUsuario(userId);
-            if (walletList.isEmpty()) {
+            List<EntradasEventuais> eventuaisList = eventuaisRepository.findAllByIdUsuario(userId);
+            List<EntradasRecorrentes> recorrentesList = recorrentesRepository.findAllByIdUsuario(userId);
+
+            List<Object> combinedList = new ArrayList<>();
+            combinedList.addAll(eventuaisList);
+            combinedList.addAll(recorrentesList);
+
+            if (combinedList.isEmpty()) {
                 return ResponseEntity.noContent().build();
             } else {
-                for (EntradasEventuais wallet : walletList) {
-                    System.out.println("ID: " + wallet.getId());
-                    System.out.println("Descrição: " + wallet.getDescricao());
-                    System.out.println("Valor: " + wallet.getValor());
-                    System.out.println("Frequência: " + wallet.getFrequencia());
-                    System.out.println("Data: " + wallet.getData());
-                    System.out.println("ID do Usuário: " + wallet.getIdUsuario());
+                for (Object entry : combinedList) {
+                    if (entry instanceof EntradasEventuais) {
+                        EntradasEventuais eventuais = (EntradasEventuais) entry;
+                        System.out.println("ID: " + eventuais.getId());
+                        System.out.println("Descrição: " + eventuais.getDescricao());
+                        System.out.println("Valor: " + eventuais.getValor());
+                        System.out.println("Frequência: " + eventuais.getFrequencia());
+                        System.out.println("Data: " + eventuais.getData());
+                        System.out.println("ID do Usuário: " + eventuais.getIdUsuario());
+                    } else if (entry instanceof EntradasRecorrentes) {
+                        EntradasRecorrentes recorrentes = (EntradasRecorrentes) entry;
+                        System.out.println("ID: " + recorrentes.getId());
+                        System.out.println("Descrição: " + recorrentes.getDescricao());
+                        System.out.println("Valor: " + recorrentes.getValor());
+                        System.out.println("Frequência: " + recorrentes.getFrequencia());
+                        System.out.println("Data: " + recorrentes.getData());
+                        System.out.println("ID do Usuário: " + recorrentes.getIdUsuario());
+                    }
                 }
-                return ResponseEntity.ok().body(walletList);
+                return ResponseEntity.ok().body(combinedList);
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -51,7 +74,7 @@ public class EntradasEventuaisController {
             YearMonth yearMonth = YearMonth.of(year, month);
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
-            List<EntradasEventuais> walletList = repository.findByIdUsuarioAndDataBetween(userId, startDate, endDate);
+            List<EntradasEventuais> walletList = eventuaisRepository.findByIdUsuarioAndDataBetween(userId, startDate, endDate);
             if (walletList.isEmpty()) {
                 return ResponseEntity.noContent().build();
             } else {
@@ -65,7 +88,7 @@ public class EntradasEventuaisController {
     @PostMapping
     public ResponseEntity<EntradasEventuais> create(@RequestBody EntradasEventuais entradaEventual) {
         try {
-            EntradasEventuais savedEntradaEventual = repository.save(entradaEventual);
+            EntradasEventuais savedEntradaEventual = eventuaisRepository.save(entradaEventual);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedEntradaEventual);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

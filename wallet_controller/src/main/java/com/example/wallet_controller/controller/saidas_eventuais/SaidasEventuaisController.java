@@ -2,6 +2,8 @@ package com.example.wallet_controller.controller.saidas_eventuais;
 
 import com.example.wallet_controller.wallet.saidasEventuais.SaidasEventuais;
 import com.example.wallet_controller.wallet.saidasEventuais.SaidasEventuaisRepository;
+import com.example.wallet_controller.wallet.saidasRecorrentes.SaidasRecorrentes;
+import com.example.wallet_controller.wallet.saidasRecorrentes.SaidasRecorrentesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -23,22 +26,42 @@ public class SaidasEventuaisController {
     @Autowired
     private SaidasEventuaisRepository repository;
 
+    @Autowired
+    private SaidasRecorrentesRepository saidasRecorrentesRepository;
+
     @GetMapping("geral/{userId}")
-    public ResponseEntity<List<SaidasEventuais>> getAllByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<Object> getAllByUserId(@PathVariable Integer userId) {
         try {
-            List<SaidasEventuais> walletList = repository.findAllByIdUsuario(userId);
-            if (walletList.isEmpty()) {
+            List<SaidasEventuais> eventuaisList = repository.findAllByIdUsuario(userId);
+            List<SaidasRecorrentes> recorrentesList = saidasRecorrentesRepository.findAllByIdUsuario(userId);
+
+            List<Object> combinedList = new ArrayList<>();
+            combinedList.addAll(eventuaisList);
+            combinedList.addAll(recorrentesList);
+
+            if (combinedList.isEmpty()) {
                 return ResponseEntity.noContent().build();
             } else {
-                for (SaidasEventuais wallet : walletList) {
-                    System.out.println("ID: " + wallet.getId());
-                    System.out.println("Descrição: " + wallet.getDescricao());
-                    System.out.println("Valor: " + wallet.getValor());
-                    System.out.println("Frequência: " + wallet.getFrequencia());
-                    System.out.println("Data: " + wallet.getData());
-                    System.out.println("ID do Usuário: " + wallet.getIdUsuario());
+                for (Object entry : combinedList) {
+                    if (entry instanceof SaidasEventuais) {
+                        SaidasEventuais eventuais = (SaidasEventuais) entry;
+                        System.out.println("ID: " + eventuais.getId());
+                        System.out.println("Descrição: " + eventuais.getDescricao());
+                        System.out.println("Valor: " + eventuais.getValor());
+                        System.out.println("Frequência: " + eventuais.getFrequencia());
+                        System.out.println("Data: " + eventuais.getData());
+                        System.out.println("ID do Usuário: " + eventuais.getIdUsuario());
+                    } else if (entry instanceof SaidasRecorrentes) {
+                        SaidasRecorrentes recorrentes = (SaidasRecorrentes) entry;
+                        System.out.println("ID: " + recorrentes.getId());
+                        System.out.println("Descrição: " + recorrentes.getDescricao());
+                        System.out.println("Valor: " + recorrentes.getValor());
+                        System.out.println("Frequência: " + recorrentes.getFrequencia());
+                        System.out.println("Data: " + recorrentes.getData());
+                        System.out.println("ID do Usuário: " + recorrentes.getIdUsuario());
+                    }
                 }
-                return ResponseEntity.ok().body(walletList);
+                return ResponseEntity.ok().body(combinedList);
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
