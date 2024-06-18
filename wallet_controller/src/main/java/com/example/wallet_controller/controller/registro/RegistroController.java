@@ -19,6 +19,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("registro")
+@CrossOrigin(origins = "http://localhost:3000")
 public class RegistroController {
 
     @Autowired
