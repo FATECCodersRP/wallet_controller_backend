@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("usuarios")
+@CrossOrigin(origins = "http://localhost:3000")
 public class UsuariosController {
 
     @Autowired
@@ -116,28 +116,38 @@ public class UsuariosController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> dadosLogin) {
         try {
+            System.out.println("Payload de entrada: " + dadosLogin);
+
             String email = dadosLogin.get("email");
             String senha = dadosLogin.get("senha");
 
             if (email == null || senha == null) {
-                return ResponseEntity.badRequest().body("Email e senha são obrigatórios.");
+                String response = "Email e senha são obrigatórios.";
+                System.out.println("Response: " + response);
+                return ResponseEntity.badRequest().body(response);
             }
 
             Optional<Usuarios> usuarioExistente = repository.findByEmail(email);
 
             if (usuarioExistente.isPresent()) {
                 Usuarios usuario = usuarioExistente.get();
-                // Verifica se a senha fornecida está correta
                 if (usuario.getSenha().equals(senha)) {
+                    System.out.println("Response: " + usuario);
                     return ResponseEntity.ok(usuario);
                 } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou senha incorretos.");
+                    String response = "Email ou senha incorretos.";
+                    System.out.println("Response: " + response);
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou senha incorretos.");
+                String response = "Email ou senha incorretos.";
+                System.out.println("Response: " + response);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao fazer login.");
+            String response = "Erro ao fazer login.";
+            System.out.println("Response: " + response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
