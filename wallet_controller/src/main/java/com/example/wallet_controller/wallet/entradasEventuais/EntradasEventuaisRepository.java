@@ -26,4 +26,8 @@ public interface EntradasEventuaisRepository extends JpaRepository<EntradasEvent
                                        @Param("mes") Integer mes,
                                        @Param("ano") Integer ano);
 
+    @Query(value = "SELECT * FROM vw_eventuais WHERE id_usuario = :userId", nativeQuery = true)
+    List<EntradasEventuais> findAllByUserId(@Param("userId") Integer userId);
+
+
 }

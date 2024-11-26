@@ -4,11 +4,13 @@ import com.example.wallet_controller.wallet.entradasEventuais.EntradasEventuais;
 import com.example.wallet_controller.wallet.entradasEventuais.EntradasEventuaisRepository;
 import com.example.wallet_controller.wallet.entradasRecorrentes.EntradasRecorrentes;
 import com.example.wallet_controller.wallet.entradasRecorrentes.EntradasRecorrentesRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -28,7 +30,8 @@ public class EntradasEventuaisController {
     @GetMapping("geral/{userId}")
     public ResponseEntity<Object> getAllByUserId(@PathVariable Integer userId) {
         try {
-            List<EntradasEventuais> eventuaisList = eventuaisRepository.findAllByIdUsuario(userId);
+            // Chamada ajustada para utilizar a view
+            List<EntradasEventuais> eventuaisList = eventuaisRepository.findAllByUserId(userId);
             List<EntradasRecorrentes> recorrentesList = recorrentesRepository.findAllByIdUsuario(userId);
 
             List<Object> combinedList = new ArrayList<>();
@@ -64,6 +67,7 @@ public class EntradasEventuaisController {
         }
     }
 
+
     @GetMapping("geral/{userId}/{year}/{month}")
     public ResponseEntity<List<EntradasEventuais>> getByUserIdAndMonthYear(@PathVariable Integer userId, @PathVariable int year, @PathVariable int month) {
         try {
@@ -81,13 +85,40 @@ public class EntradasEventuaisController {
         }
     }
 
+    @Autowired
+    private EntityManager entityManager;
+
     @PostMapping
-    public ResponseEntity<EntradasEventuais> create(@RequestBody EntradasEventuais entradaEventual) {
+    public ResponseEntity<Object> create(@RequestBody EntradasEventuais entradaEventual) {
         try {
-            EntradasEventuais savedEntradaEventual = eventuaisRepository.save(entradaEventual);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedEntradaEventual);
+            // Verifica se todos os campos necessários estão presentes
+            if (entradaEventual.getDescricao() == null || entradaEventual.getValor() == null ||
+                    entradaEventual.getFrequencia() == null || entradaEventual.getData() == null ||
+                    entradaEventual.getIdUsuario() == null) {
+                return ResponseEntity.badRequest().body("Todos os campos são obrigatórios");
+            }
+
+            // Chama a procedure para inserir a entrada eventual
+            BigDecimal newId = (BigDecimal) entityManager
+                    .createNativeQuery("EXEC sp_insert_entrada_eventual :descricao, :valor, :frequencia, :data, :idUsuario")
+                    .setParameter("descricao", entradaEventual.getDescricao())
+                    .setParameter("valor", entradaEventual.getValor())
+                    .setParameter("frequencia", entradaEventual.getFrequencia())
+                    .setParameter("data", entradaEventual.getData())
+                    .setParameter("idUsuario", entradaEventual.getIdUsuario())
+                    .getSingleResult(); // Espera um único valor (o ID gerado, no caso, BigDecimal)
+
+            // Se o retorno for BigDecimal, converta para Integer (caso necessário)
+            Integer newIdInt = newId.intValue();  // Converte BigDecimal para Integer, caso necessário
+
+            // Retorna o ID recém-gerado como resposta
+            return ResponseEntity.status(HttpStatus.CREATED).body("ID gerado: " + newIdInt);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            // Log de erro para diagnóstico detalhado
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro: " + e.getMessage());
         }
     }
+
+
 }

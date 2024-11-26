@@ -1,5 +1,6 @@
 package com.example.wallet_controller.wallet.saidasEventuais;
 
+import com.example.wallet_controller.controller.saidas_eventuais.SaidaUsuario;
 import com.example.wallet_controller.wallet.saidasRecorrentes.SaidasRecorrentes;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
